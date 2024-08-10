@@ -9,6 +9,14 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# Define Chrome options
+chrome_options = Options()
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.page_load_strategy = 'eager'
 
 base_url = "https://knowyourmeme.com/memes/"
 
@@ -20,8 +28,17 @@ with webdriver.Chrome(service=service, options=chrome_options) as browser:
     for id in range(range_start, range_end+1):
         url = base_url + str(id)
         print(f"Browsing {url}")
-        browser.get(url)
         meme_object = dict({})
+
+        try:
+            browser.get(url)
+            WebDriverWait(browser, 10).until(EC.presence_of_element_located(('tag name', 'body')))
+        except:
+            print(f"Page not found in 10 seconds, Skipping meme {id}")
+            print()
+            continue
+
+        print()
 
         try:
             meme_object["id"] = id
@@ -68,6 +85,9 @@ with webdriver.Chrome(service=service, options=chrome_options) as browser:
 
         except:
             print(f"Element not found, Skipping meme {id}")
+            print()
+        
+        print()
 
     with open(f"memes{range_start}-{range_end}.json", "w") as outfile:
         json.dump(memes, outfile)

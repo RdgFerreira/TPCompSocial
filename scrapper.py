@@ -4,89 +4,104 @@ import os
 import pandas as pd
 import sys
 import json
+import signal
+from alive_progress import alive_bar
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
-
-# Define Chrome options
-chrome_options = Options()
-# chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Define paths
 user_home_dir = os.path.expanduser("~")
-chrome_binary_path = os.path.join(user_home_dir, "chrome-linux64", "chrome")
-chromedriver_path = os.path.join(user_home_dir, "chromedriver-linux64", "chromedriver")
+chrome_binary_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+dir = os.path.dirname(__file__)
+chromedriver_path = os.path.join(dir, "chromedriver")
+
+# Define Chrome options
+chrome_options = Options()
+chrome_options.add_argument("--headless=new")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.page_load_strategy = 'eager'
 
 # Set binary location and service
 chrome_options.binary_location = chrome_binary_path
 service = Service(chromedriver_path)
-
-# url = "https://knowyourmeme.com/memes/50914"
-# 50915
 
 base_url = "https://knowyourmeme.com/memes/"
 
 range_start, range_end = int(sys.argv[1]), int(sys.argv[2])
 
 # Initialize Chrome WebDriver
-with webdriver.Chrome(service=service, options=chrome_options) as browser:
+with alive_bar(range_end-range_start+1) as bar:
     memes = []
     for id in range(range_start, range_end+1):
-        url = base_url + str(id)
-        print(f"Browsing {url}")
-        browser.get(url)
-        meme_object = dict({})
+        with webdriver.Chrome(service=service, options=chrome_options) as browser:
+            url = base_url + str(id)
+            meme_object = dict({})
 
-        try:
-            meme_object["id"] = id
+            def handler(signum, frame):
+                raise Exception("end of time")
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(10)
+                
+            try:
+                browser.get(url)
 
-            meme_title = browser.find_element(By.TAG_NAME, "h1").text
-            print(f"Title: {meme_title}")
-            meme_object["title"] = meme_title
+            except:
+                print(f"Page not found in 10 seconds, Skipping meme {id}")
+                signal.alarm(0)
+                browser.quit()
+                bar()
+                continue
 
-            table_elements = browser.find_elements(By.TAG_NAME, "dl")
-            [engagement_stats, general_info, tags_cnt] = table_elements
+            try:
+                meme_object["id"] = id
 
-            views = engagement_stats.find_element(By.CLASS_NAME, "views").text
-            print(f"Views: {views}")
-            meme_object["views"] = int(views.replace(',', ''))
+                meme_title = browser.find_element(By.TAG_NAME, "h1").text
+                meme_object["title"] = meme_title
 
-            videos = engagement_stats.find_element(By.CLASS_NAME, "videos").text
-            print(f"Videos: {videos}")
-            meme_object["videos"] = int(videos)
+                table_elements = browser.find_elements(By.TAG_NAME, "dl")
+                [engagement_stats, general_info, tags_cnt] = table_elements
 
-            photos = engagement_stats.find_element(By.CLASS_NAME, "photos").text
-            print(f"photos: {photos}")
-            meme_object["photos"] = int(photos)
+                views = engagement_stats.find_element(By.CLASS_NAME, "views").text
+                meme_object["views"] = int(views.replace(',', ''))
 
-            comments = engagement_stats.find_element(By.CLASS_NAME, "comments").text
-            print(f"comments: {comments}")
-            meme_object["comments"] = int(comments)
+                videos = engagement_stats.find_element(By.CLASS_NAME, "videos").text
+                meme_object["videos"] = int(videos)
 
-            category = general_info.find_element(By.CLASS_NAME, "entry-category-badge").text
-            print(f"category: {category}")
-            meme_object["category"] = category
+                photos = engagement_stats.find_element(By.CLASS_NAME, "photos").text
+                meme_object["photos"] = int(photos)
 
-            info_names = general_info.find_elements(By.TAG_NAME, "dt")
-            info_values = general_info.find_elements(By.TAG_NAME, "dd")
+                comments = engagement_stats.find_element(By.CLASS_NAME, "comments").text
+                meme_object["comments"] = int(comments)
 
-            for name, value in zip(info_names, info_values): meme_object[name.text.strip()] = value.text.strip()
+                category = general_info.find_element(By.CLASS_NAME, "entry-category-badge").text
+                meme_object["category"] = category
 
-            tagsElement = tags_cnt.find_element(By.TAG_NAME, "dd")
-            tagElements = tagsElement.find_elements(By.TAG_NAME, "a")
-            tags = [tagElement.text for tagElement in tagElements]
-            print(f"tags: {tags}")
-            meme_object["tags"] = tags
-        
-            memes.append(meme_object)
+                info_names = general_info.find_elements(By.TAG_NAME, "dt")
+                info_values = general_info.find_elements(By.TAG_NAME, "dd")
 
-        except:
-            print(f"Element not found, Skipping meme {id}")
+                for name, value in zip(info_names, info_values): meme_object[name.text.strip()] = value.text.strip()
 
-    with open(f"memes{range_start}-{range_end}.json", "w") as outfile:
-        json.dump(memes, outfile)
+                tagsElement = tags_cnt.find_element(By.TAG_NAME, "dd")
+                tagElements = tagsElement.find_elements(By.TAG_NAME, "a")
+                tags = [tagElement.text for tagElement in tagElements]
+                meme_object["tags"] = tags
+            
+                memes.append(meme_object)
+                signal.alarm(0)
+                browser.quit()
+                bar()
 
-browser.quit()
+            except:
+                print(f"Element not found, Skipping meme {id}")
+                signal.alarm(0)
+                browser.quit()
+                bar()
+            
+
+        with open(f"memes{range_start}-{range_end}.json", "w") as outfile:
+            json.dump(memes, outfile)

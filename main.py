@@ -10,23 +10,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
-# Define Chrome options
-chrome_options = Options()
-# chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
-
-# Define paths
-user_home_dir = os.path.expanduser("~")
-chrome_binary_path = os.path.join(user_home_dir, "chrome-linux64", "chrome")
-chromedriver_path = os.path.join(user_home_dir, "chromedriver-linux64", "chromedriver")
-
-# Set binary location and service
-chrome_options.binary_location = chrome_binary_path
-service = Service(chromedriver_path)
-
-# url = "https://knowyourmeme.com/memes/50914"
-# 50915
-
 base_url = "https://knowyourmeme.com/memes/"
 
 range_start, range_end = int(sys.argv[1]), int(sys.argv[2])

@@ -32,7 +32,8 @@ with webdriver.Chrome(service=service, options=chrome_options) as browser:
 
         try:
             browser.get(url)
-            WebDriverWait(browser, 10).until(EC.presence_of_element_located(('tag name', 'body')))
+            # raise an exception if the page is not loaded in 10 seconds
+            WebDriverWait(browser, 10).until(lambda x: x.find_element(By.TAG_NAME, "h1"))
         except:
             print(f"Page not found in 10 seconds, Skipping meme {id}")
             print()

@@ -25,6 +25,7 @@ range_start, range_end = int(sys.argv[1]), int(sys.argv[2])
 # Initialize Chrome WebDriver
 with webdriver.Chrome(service=service, options=chrome_options) as browser:
     memes = []
+    browser.set_page_load_timeout(15)
     for id in range(range_start, range_end+1):
         url = base_url + str(id)
         print(f"Browsing {url}")
@@ -33,9 +34,9 @@ with webdriver.Chrome(service=service, options=chrome_options) as browser:
         try:
             browser.get(url)
             # raise an exception if the page is not loaded in 10 seconds
-            WebDriverWait(browser, 10).until(lambda x: x.find_element(By.TAG_NAME, "h1"))
+            # WebDriverWait(browser, 15).until(lambda x: x.find_element(By.TAG_NAME, "h1"))
         except:
-            print(f"Page not found in 10 seconds, Skipping meme {id}")
+            print(f"Page not found in 15 seconds, Skipping meme {id}")
             print()
             continue
 

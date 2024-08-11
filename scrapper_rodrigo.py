@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 # from seleniumwire import webdriver as sweb
 
-import random
+# import random
 
 # # # the list of proxy to rotate on 
 # PROXIES = [
@@ -21,7 +21,7 @@ import random
 # ]
 
 # # randomly select a proxy
-proxy = random.choice(PROXIES)
+# proxy = random.choice(PROXIES)
 
 # # set selenium-wire options to use the proxy
 # seleniumwire_options = {

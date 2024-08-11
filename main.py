@@ -93,5 +93,5 @@ with alive_bar(range_end-range_start+1) as bar:
                 bar()
             
 
-        with open(f"memes{range_start}-{range_end}.json", "w") as outfile:
+        with open(f"outputs/memes{range_start}-{range_end}.json", "w") as outfile:
             json.dump(memes, outfile)

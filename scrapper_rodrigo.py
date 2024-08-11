@@ -7,6 +7,29 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+# from seleniumwire import webdriver as sweb
+
+import random
+
+# # # the list of proxy to rotate on 
+# PROXIES = [
+#     "http://20.235.159.154:80",
+#     "http://149.169.197.151:80",
+#     "http://138.197.102.119:80",
+#     "http://212.76.118.242:97",
+#     "http://198.49.68.80:80"
+# ]
+
+# # randomly select a proxy
+proxy = random.choice(PROXIES)
+
+# # set selenium-wire options to use the proxy
+# seleniumwire_options = {
+#     "proxy": {
+#         "http": proxy,
+#         "https": proxy
+#     },
+# }
 
 # Define Chrome options
 chrome_options = Options()
@@ -55,6 +78,10 @@ with alive_bar(range_end-range_start+1) as bar:
 
             try:
                 meme_object["id"] = id
+
+                # # dump the whole html to a txt file
+                # with open(f"outputs/meme{id}.txt", "w") as file:
+                #     file.write(browser.page_source)
 
                 meme_title = browser.find_element(By.TAG_NAME, "h1").text
                 meme_object["title"] = meme_title

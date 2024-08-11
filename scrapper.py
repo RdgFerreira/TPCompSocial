@@ -16,9 +16,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 # Define paths
 user_home_dir = os.path.expanduser("~")
-chrome_binary_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-dir = os.path.dirname(__file__)
-chromedriver_path = os.path.join(dir, "chromedriver")
+chrome_binary_path = os.path.join(user_home_dir, "chrome-linux64", "chrome")
+chromedriver_path = os.path.join(
+    user_home_dir, "chromedriver-linux64", "chromedriver")
 
 # Define Chrome options
 chrome_options = Options()
@@ -46,7 +46,7 @@ with alive_bar(range_end-range_start+1) as bar:
                 raise Exception("end of time")
             signal.signal(signal.SIGALRM, handler)
             signal.alarm(10)
-                
+
             try:
                 browser.get(url)
 
@@ -66,31 +66,37 @@ with alive_bar(range_end-range_start+1) as bar:
                 table_elements = browser.find_elements(By.TAG_NAME, "dl")
                 [engagement_stats, general_info, tags_cnt] = table_elements
 
-                views = engagement_stats.find_element(By.CLASS_NAME, "views").text
+                views = engagement_stats.find_element(
+                    By.CLASS_NAME, "views").text
                 meme_object["views"] = int(views.replace(',', ''))
 
-                videos = engagement_stats.find_element(By.CLASS_NAME, "videos").text
+                videos = engagement_stats.find_element(
+                    By.CLASS_NAME, "videos").text
                 meme_object["videos"] = int(videos)
 
-                photos = engagement_stats.find_element(By.CLASS_NAME, "photos").text
+                photos = engagement_stats.find_element(
+                    By.CLASS_NAME, "photos").text
                 meme_object["photos"] = int(photos)
 
-                comments = engagement_stats.find_element(By.CLASS_NAME, "comments").text
+                comments = engagement_stats.find_element(
+                    By.CLASS_NAME, "comments").text
                 meme_object["comments"] = int(comments)
 
-                category = general_info.find_element(By.CLASS_NAME, "entry-category-badge").text
+                category = general_info.find_element(
+                    By.CLASS_NAME, "entry-category-badge").text
                 meme_object["category"] = category
 
                 info_names = general_info.find_elements(By.TAG_NAME, "dt")
                 info_values = general_info.find_elements(By.TAG_NAME, "dd")
 
-                for name, value in zip(info_names, info_values): meme_object[name.text.strip()] = value.text.strip()
+                for name, value in zip(info_names, info_values):
+                    meme_object[name.text.strip()] = value.text.strip()
 
                 tagsElement = tags_cnt.find_element(By.TAG_NAME, "dd")
                 tagElements = tagsElement.find_elements(By.TAG_NAME, "a")
                 tags = [tagElement.text for tagElement in tagElements]
                 meme_object["tags"] = tags
-            
+
                 memes.append(meme_object)
                 signal.alarm(0)
                 browser.quit()
@@ -101,7 +107,6 @@ with alive_bar(range_end-range_start+1) as bar:
                 signal.alarm(0)
                 browser.quit()
                 bar()
-            
 
-        with open(f"memes{range_start}-{range_end}.json", "w") as outfile:
+        with open(f"outputs/memes{range_start}-{range_end}.json", "w") as outfile:
             json.dump(memes, outfile)
